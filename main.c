@@ -5,6 +5,7 @@
 #include <syslog.h>
 #include <stdbool.h>
 #include <string.h>
+#include <limits.h>   /* PATH_MAX */
 
 #include "daemon.h"
 #include "signals.h"
@@ -75,8 +76,21 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    char *source    = argv[optind];
-    char *target    = argv[optind + 1];
+    char abs_source[PATH_MAX], abs_target[PATH_MAX];
+
+    if (!realpath(argv[optind], abs_source)) {
+        perror("realpath (source)");
+        return EXIT_FAILURE;
+    }
+    if (!realpath(argv[optind + 1], abs_target)) {
+        perror("realpath (target)");
+        return EXIT_FAILURE;
+    }
+
+    char* source = abs_source;
+    char* target = abs_target;
+
+
     int   sleep_sec = (optind + 2 < argc)
                         ? atoi(argv[optind + 2])
                         : DEFAULT_SLEEP_SECS;
